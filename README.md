@@ -48,7 +48,7 @@ OPTIONS:
 -h, --help      - Apresentacao do Help
 ```
 
-##### No script existem parametros default da AWS:
+##### No script existem parametros a serem informados:
 
 ```
 - Dominio das intancias criadas para o cadastro de DNS
@@ -63,9 +63,8 @@ PASS=""
 NAME_POOL=""
 COUNT="1"
 USER_SSH="ubuntu"
-AWS_REGION="us-east-1"
 
-- Variaveis AWS
+AWS_REGION="us-east-1"
 AWS_FLAVOR=""
 AWS_AMI=""
 AWS_INSTANCE_PROFILE=""
