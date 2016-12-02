@@ -59,24 +59,24 @@ PATH_SCRIPT=""
 
 - Dominio das intancias criadas para o cadastro de DNS
 DOMAIN="dominio.com.br"
-ZONE_ID="123456"
+AWS_ZONE_ID="123456"
 
 - Variaveis DEFAULT
-PROVIDER="aws"
 BOOTSTRAP=""
-USER=""
-PASS=""
 NAME_POOL=""
-TAG=""
 COUNT="1"
-USER_SSH="ubuntu"
 
-AWS_REGION="us-east-1"
+AWS_PROVIDER="aws"
+AWS_USER=""
+AWS_PASS=""
+AWS_TAG=""
 AWS_FLAVOR=""
 AWS_AMI=""
+AWS_REGION="us-east-1"
 AWS_INSTANCE_PROFILE=""
 AWS_KEY_NAME=""
 AWS_SUBNET=""
 AWS_SECURITY_GROUP=""
+AWS_USER_SSH="ubuntu"
 AWS_KEY_SSH_FILE="~/.ssh/XXX.pem"
 ```

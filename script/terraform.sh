@@ -14,16 +14,19 @@ PATH_SCRIPT=""
 TMP_ERROR=$(mktemp)
 TMP_DIRECTOR=$(mktemp -d)
 
-# Variaveis DEFAULT #
-PROVIDER="aws"
-BOOTSTRAP=""
-USER=""
-PASS=""
-NAME_POOL=""
-TAG=""
-COUNT="1"
-USER_SSH="ubuntu"
+# Dominio das intancias criadas para o cadastro de DNS #
+DOMAIN="dominio.com.br"
+AWS_ZONE_ID="123456"
 
+# Variaveis DEFAULT #
+BOOTSTRAP=""
+NAME_POOL=""
+COUNT="1"
+
+AWS_PROVIDER="aws"
+AWS_USER=""
+AWS_PASS=""
+AWS_TAG=""
 AWS_FLAVOR=""
 AWS_AMI=""
 AWS_REGION="us-east-1"
@@ -31,6 +34,7 @@ AWS_INSTANCE_PROFILE=""
 AWS_KEY_NAME=""
 AWS_SUBNET=""
 AWS_SECURITY_GROUP=""
+AWS_USER_SSH="ubuntu"
 AWS_KEY_SSH_FILE="~/.ssh/XXX.pem"
 
 # Help #
@@ -79,13 +83,13 @@ while [ $# -gt 0 ]; do
             exit 1
             ;;
         -p|--provider)
-            PROVIDER=$2
+            AWS_PROVIDER=$2
             ;;
         -u|--user)
-            USER=$2
+            AWS_USER=$2
             ;;
         -s|--pass)
-            PASS=$2
+            AWS_PASS=$2
             ;;
         -n|--name)
             NAME_POOL=$2
@@ -117,21 +121,21 @@ while [ $# -gt 0 ]; do
             BOOTSTRAP=$2
             ;;
         -t|--tag)
-            TAG=$2
+            AWS_TAG=$2
             ;;
     esac
     shift
 done
 
-# Tratando a instancia AWS sem disco EBS #
-if [ "${PROVIDER}" = "aws" ]; then
+# Tratando os inputs do script #
+if [ "${AWS_PROVIDER}" = "aws" ]; then
 
-    if  [ "${USER}" = "" ]; then
+    if  [ "${AWS_USER}" = "" ]; then
         echo "Digite a access_key de seu profile"
         read USER
     fi
 
-    if  [ "${PASS}" = "" ]; then
+    if  [ "${AWS_PASS}" = "" ]; then
         echo "Digite a secret_key de seu profile"
         read PASS
     fi
@@ -146,13 +150,13 @@ if [ "${PROVIDER}" = "aws" ]; then
         read BOOTSTRAP
     fi
 else
-    echo "Error: User: ${USER}, Pass: ${PASS}, Name_Pool: ${NAME_POOL}, Bootstrap ${BOOTSTRAP} nao foram encontrados"
+    echo "Error: User: ${AWS_USER}, Pass: ${AWS_PASS}, Name_Pool: ${NAME_POOL}, Bootstrap ${BOOTSTRAP} nao foram encontrados"
     echo "Veja: ./terraform.sh --help"
     exit 1
 fi
 
-# Tratando o template Terraform sem o disco EBS #
-if [ "${PROVIDER}" = "aws" ]; then
+# Tratando o template Terraform #
+if [ "${AWS_PROVIDER}" = "aws" ]; then
 
 /bin/cat << EOF > $TMP_DIRECTOR/aws.tf
 provider "aws" {
@@ -172,7 +176,7 @@ resource "aws_instance" "${NAME_POOL}" {
     security_groups = [ "\${var.security_group}" ]
     tags {
         Name = "${NAME_POOL}"
-        Ambiente = "${TAG}"
+        Ambiente = "${AWS_TAG}"
     }
 
     ephemeral_block_device {
@@ -229,6 +233,18 @@ resource "aws_instance" "${NAME_POOL}" {
     }
 }
 
+resource "aws_route53_record" "${NAME_POOL}" {
+    zone_id = "${AWS_ZONE_ID}"
+    name = "${NAME_POOL}.${DOMAIN}"
+    type = "A"
+    ttl = "300"
+    records = ["\${aws_instance.${NAME_POOL}.private_ip}"]
+}
+
+output "DNS" {
+    value = "\${aws_route53_record.${NAME_POOL}.name}"
+}
+
 output "IP" {
     value = "\${aws_instance.${NAME_POOL}.private_ip}"
 }
@@ -236,8 +252,8 @@ EOF
 
 # Arquivo de Variavies #
 /bin/cat << EOF > $TMP_DIRECTOR/variables.tf
-variable "access_key" { default = "${USER}" }
-variable "secret_key" { default = "${PASS}" }
+variable "access_key" { default = "${AWS_USER}" }
+variable "secret_key" { default = "${AWS_PASS}" }
 variable "ami" { default = "${AWS_AMI}" }
 variable "count" { default = "${COUNT}" }
 variable "region" { default = "${AWS_REGION}" }
@@ -246,7 +262,7 @@ variable "instance_profile" { default = "${AWS_INSTANCE_PROFILE}" }
 variable "key_name" { default = "${AWS_KEY_NAME}" }
 variable "subnet_id" { default = "${AWS_SUBNET}" }   
 variable "security_group" { default = "${AWS_SECURITY_GROUP}" }
-variable "user_ssh" { default = "${USER_SSH}" }
+variable "user_ssh" { default = "${AWS_USER_SSH}" }
 variable "key_ssh_file" { default = "${AWS_KEY_SSH_FILE}" }
 EOF
 
