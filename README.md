@@ -16,13 +16,14 @@ Foi criado um script chamado "terraform.sh" que faz o tratamento através de par
 ##### Provisionar instancias:
 
 ```
-Usage: ./terraform.sh -u ABCBABS -s ABCBA -n app-web-1 -r private-1a -b https://s3.amazonaws.com/bucket/file-user-data
+Usage: ./terraform.sh -u ABCBABS -s ABCBA -n app-web-1 -r private-1a -b https://s3.amazonaws.com/bucket/file-user-data -t producao
 ```
 
 OPTIONS:
 
 ```
 -p, --provider  - Informar o provider aws
+                DEFAULT: aws
 
 -u, --user      - Informar o usuario access_key
 
@@ -38,12 +39,14 @@ OPTIONS:
 
 -m, --ami       - Informar a AMI da instancia.
                 HVM: ami-XXXX
-                PVM: ami-XXXX
 
 -r, --subnet    - Informar a subnet.
                 DEFAULT: subnet-XXXX - private-1a
+                         subnet-XXXX - private-1b
 
 -b, --bootstrap - Informar a URL de Boostrap - User Data
+
+-t, --tag       - Informar a TAG do Ambiente
 
 -h, --help      - Apresentacao do Help
 ```
@@ -51,6 +54,9 @@ OPTIONS:
 ##### No script existem parametros a serem informados:
 
 ```
+# Informar o local onde esta o script do terraform.sh #
+PATH_SCRIPT=""
+
 - Dominio das intancias criadas para o cadastro de DNS
 DOMAIN="dominio.com.br"
 ZONE_ID="123456"
@@ -61,6 +67,7 @@ BOOTSTRAP=""
 USER=""
 PASS=""
 NAME_POOL=""
+TAG=""
 COUNT="1"
 USER_SSH="ubuntu"
 
