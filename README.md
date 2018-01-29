@@ -1,9 +1,9 @@
-# aws-terraform
+# aws-terraform-bash
 
-- Provisionamento de Instância - AWS
+- Provisionamento de Instância On Demand- AWS
 
-Este script consiste em provisionar uma nova instância na Amazon AWS através da ferramenta Terraform da Empresa Hashcorp.
-Referência: https://www.terraform.io/
+Este script consiste em provisionar uma nova instância on demand na Amazon AWS através da ferramenta Terraform da Empresa Hashcorp.
+https://www.terraform.io/
 
 ##### How To:
 
@@ -38,11 +38,10 @@ OPTIONS:
 -f, --flavor    - Informar o tipo de instancia
 
 -m, --ami       - Informar a AMI da instancia.
-                HVM: ami-XXXX
+                DEFAULT: ami-XXXX
 
 -r, --subnet    - Informar a subnet.
-                DEFAULT: subnet-XXXX - private-1a
-                         subnet-XXXX - private-1b
+                DEFAULT: subnet-XXXX
 
 -b, --bootstrap - Informar a URL de Boostrap - User Data
 
@@ -51,7 +50,7 @@ OPTIONS:
 -h, --help      - Apresentacao do Help
 ```
 
-##### No script existem parametros a serem informados:
+##### No script existem parâmetros a serem informados:
 
 ```
 # Informar o local onde esta o script do terraform.sh #
@@ -65,15 +64,15 @@ AWS_ZONE_ID="123456"
 AWS_PROVIDER="aws"
 AWS_AMI="ami-XXXX"
 AWS_REGION="us-east-1"
-AWS_INSTANCE_PROFILE=""
-AWS_KEY_NAME="key"
+AWS_INSTANCE_PROFILE="XXXX"
+AWS_KEY_NAME="key-name"
 AWS_SUBNET="subnet-XXXX"
 AWS_SECURITY_GROUP="sg-XXXX"
 AWS_USER_SSH="ubuntu"
-AWS_KEY_SSH_FILE="~/.ssh/XXX.pem"
+AWS_KEY_SSH_FILE="/path/XXX.pem"
 COUNT="1"
 
-- Variaveis inputadas pelo script
+- Variaveis inputadas através do script
 AWS_USER=""
 AWS_PASS=""
 NAME_POOL=""

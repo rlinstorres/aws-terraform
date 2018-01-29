@@ -4,6 +4,7 @@
 # Script para provionamento de Instancias       #
 # na Amazon AWS atraves da Ferramenta Terraform #
 # Ref.: https://www.terraform.io/               #
+# Terraform v0.10.6                             #
 #################################################
 
 # Informar o local onde esta o script do terraform.sh #
@@ -22,12 +23,12 @@ AWS_ZONE_ID="123456"
 AWS_PROVIDER="aws"
 AWS_AMI="ami-XXXX"
 AWS_REGION="us-east-1"
-AWS_INSTANCE_PROFILE=""
-AWS_KEY_NAME="key"
+AWS_INSTANCE_PROFILE="XXXX"
+AWS_KEY_NAME="key-name"
 AWS_SUBNET="subnet-XXXX"
 AWS_SECURITY_GROUP="sg-XXXX"
 AWS_USER_SSH="ubuntu"
-AWS_KEY_SSH_FILE="~/.ssh/XXX.pem"
+AWS_KEY_SSH_FILE="/path/XXX.pem"
 COUNT="1"
 
 # Variaveis inputadas pelo script #
@@ -43,7 +44,7 @@ usage_help() {
     echo ""
     echo "  - Provisionar instancias:"
     echo ""
-    echo "  Usage: ./terraform.sh -u ABCBABS -s ABCBA -n app-web-1 -f t2.micro -b https://s3.amazonaws.com/bucket/file-user-data -t producao"
+    echo "  Usage: ./terraform.sh -n app-web-1 -f t2.micro -b https://s3.amazonaws.com/bucket/file-user-data -t producao"
     echo ""
     echo "  OPTIONS:"
     echo ""
@@ -58,16 +59,15 @@ usage_help() {
     echo "                    Ex.: app-web-1"
     echo ""
     echo "  -c, --count     - Informar a quantidade de instancias"
-    echo "                    DEFAULT: 1"
+    echo "                    DEFAULT: ${COUNT}"
     echo ""
     echo "  -f, --flavor    - Informar o instance type da aws"
     echo ""
     echo "  -m, --ami       - Informar a AMI da instancia"
-    echo "                    DEFAULT - HVM: ami-XXXX"
+    echo "                    DEFAULT: ${AWS_AMI}"
     echo ""
     echo "  -r, --subnet    - Informar a subnet"
-    echo "                    DEFAULT: subnet-XXXX - private-1a"
-    echo "                             subnet-XXXX - private-1b"
+    echo "                    DEFAULT: ${AWS_SUBNET}"
     echo ""
     echo "  -b, --bootstrap - Informar a URL de Boostrap do Ambiente"
     echo ""
@@ -102,21 +102,10 @@ while [ $# -gt 0 ]; do
             AWS_FLAVOR=$2
             ;;
         -m|--ami)
-            case $2 in
-                hvm)
-                    AWS_AMI="ami-XXX"
-                    ;;
-            esac
+            AWS_AMI=$2
             ;;
         -r|--subnet)
-            case $2 in
-                private-1a)
-                    AWS_SUBNET="subnet-XXXX"
-                    ;;
-                private-1b)
-                    AWS_SUBNET="subnet-XXXX"
-                    ;;
-            esac
+            AWS_SUBNET=$2
             ;;
         -b|--bootstrap)
             BOOTSTRAP=$2
@@ -151,7 +140,7 @@ if [ "${AWS_PROVIDER}" = "aws" ]; then
         read BOOTSTRAP
     fi
 else
-    echo "Error: User: ${AWS_USER}, Pass: ${AWS_PASS}, Name_Pool: ${NAME_POOL}, Bootstrap ${BOOTSTRAP} nao foram encontrados"
+    echo "Error: User: ${AWS_USER} e/ou Pass: ${AWS_PASS} e/ou Name_Pool: ${NAME_POOL} e/ou Bootstrap ${BOOTSTRAP} nao foram encontrados"
     echo "Veja: ./terraform.sh --help"
     exit 1
 fi
@@ -161,6 +150,7 @@ if [ "${AWS_PROVIDER}" = "aws" ]; then
 
 /bin/cat << EOF > $TMP_DIRECTOR/aws.tf
 provider "aws" {
+    version = "~> 1.0"
     access_key = "\${var.access_key}"
     secret_key = "\${var.secret_key}"
     region = "\${var.region}"
@@ -180,51 +170,11 @@ resource "aws_instance" "${NAME_POOL}" {
         Ambiente = "${AWS_TAG}"
     }
 
-    ephemeral_block_device {
-        device_name = "xvdb"
-        virtual_name = "ephemeral0"
-    }
-
-    ephemeral_block_device {
-        device_name = "xvdc"
-        virtual_name = "ephemeral1"
-    }
-
-    ephemeral_block_device {
-        device_name = "xvdd"
-        virtual_name = "ephemeral2"
-    }
-
-    ephemeral_block_device {
-        device_name = "xvde"
-        virtual_name = "ephemeral3"
-    }
-
-    ephemeral_block_device {
-        device_name = "xvdf"
-        virtual_name = "ephemeral4"
-    }
-
-    ephemeral_block_device {
-        device_name = "xvdg"
-        virtual_name = "ephemeral5"
-    }
-
-    ephemeral_block_device {
-        device_name = "xvdh"
-        virtual_name = "ephemeral6"
-    }
-
-    ephemeral_block_device {
-        device_name = "xvdi"
-        virtual_name = "ephemeral7"
-    }
-
     connection {
         user = "\${var.user_ssh}"
-        key_file = "\${var.key_ssh_file}"
+        private_key = "\${file(var.key_ssh_file)}"
         timeout = "3m"
-        agent = "false"
+        agent = "true"
     }
 
     provisioner "remote-exec" {
@@ -278,6 +228,7 @@ if [[ -n "$(which terraform 2>/dev/null)" ]]; then
     TERRAFORM=$(which terraform 2>/dev/null);
 fi;
 
+cd ${TMP_DIRECTOR} && ${TERRAFORM} init
 run=$(${TERRAFORM} validate ${TMP_DIRECTOR}) 2> "${TMP_ERROR}"
 if [[ $run = *Error* ]]; then
     echo "Validacao dos arquivos do Terraform"
@@ -287,10 +238,3 @@ else
     echo "Provisionando a Instancia ${NAME_POOL}, aguarde um momento =)"
     run=$(${TERRAFORM} apply ${TMP_DIRECTOR})
 fi
-
-/bin/rm -f ${PATH_SCRIPT}/terraform.tfstate
-/bin/rm -f ${PATH_SCRIPT}/terraform.tfstate.backup
-/bin/rm -f /tmp/tf-plugin*
-/bin/rm -f /tmp/terraform-log*
-/bin/rm -f ${TMP_ERROR}
-/bin/rm -rf ${TMP_DIRECTOR}
