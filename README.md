@@ -16,7 +16,7 @@ Foi criado um script chamado "terraform.sh" que faz o tratamento através de par
 ##### Provisionar instancias:
 
 ```
-Usage: ./terraform.sh -u ABCBABS -s ABCBA -n app-web-1 -f t2.micro -b https://s3.amazonaws.com/bucket/file-user-data -t producao
+Usage: ./terraform.sh -n app-web-1 -f t2.micro -b https://s3.amazonaws.com/bucket/file-user-data -t producao
 ```
 
 OPTIONS:
